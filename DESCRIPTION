@@ -1,0 +1,24 @@
+Package: ScenarioModelingHub.plot
+Type: Package
+Title: Shiny Plot
+Version: 0.1.0
+Authors@R: 
+     c(person(given = "Lucie", 
+            family = "Contamin", 
+            role = c("aut", "cre"), 
+            email = "contamin@pitt.edu", 
+            comment = c(ORCID = "0000-0001-5797-1279")),
+      person(given = "COVID19 Scenario Modeling Hub Coordination Team",
+             role = "aut"))
+Description: Plot for SMH Shiny.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 3.5.0)
+RoxygenNote: 7.2.0
+Imports: data.table,
+         ggplot2,
+         plotly,
+         lubridate,
+         scales,
+         stringr,
