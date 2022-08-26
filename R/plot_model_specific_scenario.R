@@ -31,13 +31,18 @@ get_model_specific_trend_data <- function(model_data, location, rtab, target_typ
   pred_date = as.Date(min_model_date)-7
 
   # filter the gold standard data, based on 26 wks prior to the pred_date
-  g_df <- lapply(gs_data[targets], function(x) {
-    x[geo_value_fullname==location &
-        time_value > (pred_date - lubridate::period(4, "month")) &
-        time_value <= max_model_date ]
+  if (!is.null(gs_data)) {
+    g_df <- lapply(gs_data[targets], function(x) {
+      x[geo_value_fullname==location &
+          time_value > (pred_date - lubridate::period(4, "month")) &
+          time_value <= max_model_date ]
 
-  })
-  g_df <- rbindlist(g_df, idcol="outcome")
+    })
+    g_df <- rbindlist(g_df, idcol="outcome")
+  } else {
+    g_df <- NULL
+  }
+
   return(list("m_df" = m_df, "g_df" = g_df))
 
 }
@@ -100,6 +105,7 @@ create_model_specific_plotly <- function(model_data, location, rtab, target_type
     scen_info[rnd_num==r, .(scenario_id, scen_title)],
     on=.(scenario_id)]
 
+
   # change the names of lower and upper if pi!0
   if(pi!=0) {
     if(pi==50) oldnames = c("0.25", "0.75")
@@ -109,15 +115,22 @@ create_model_specific_plotly <- function(model_data, location, rtab, target_type
 
   avail_outcomes <- intersect(facet_levels, unique(pl_input[["m_df"]]$outcome))
 
+  if (is.null(pl_input[["g_df"]])) {
+    g_df_plot <- NULL
+  } else {
+    g_df_plot <- pl_input[["g_df"]][outcome==avail_outcomes[x]]
+  }
+
   subplots <- lapply(seq_along(avail_outcomes), function(x) {
     outcome_subplot(pl_input[["m_df"]][outcome==avail_outcomes[x]],
-                    pl_input[["g_df"]][outcome==avail_outcomes[x]],
+                    g_df_plot,
                     outcome==avail_outcomes[x],
                     model_legend = x==1,
                     pi=pi
     )
   })
 
+  print("Test")
   # Make some subplot annotations (titles)
   outcome_annotations <- lapply(seq_along(avail_outcomes), function(outc) {
       list(x =(outc-1)/length(avail_outcomes),
@@ -154,6 +167,7 @@ outcome_subplot <- function(m_df, g_df, outcome_name, model_legend=F, trace_name
 
 
 
+
   p <- plot_ly(height = 1050) %>%
     # add the model data, using the model_legend to turn legend on or off
     add_trace(data=m_df,
@@ -166,15 +180,19 @@ outcome_subplot <- function(m_df, g_df, outcome_name, model_legend=F, trace_name
               line=list(width=4),
               showlegend = model_legend,
               legendgroup = ~scen_title
-              ) %>%
-    # add the gold standard black markers
-    add_trace(data=g_df,
-              x=~time_value,
-              y=~value,
-              type="scatter",
-              mode="markers",
-              marker=list(color='black'),
-              showlegend=F)
+              )
+
+  if (!is.null(g_df)) {
+    p <- p %>%
+      # add the gold standard black markers
+      add_trace(data=g_df,
+                x=~time_value,
+                y=~value,
+                type="scatter",
+                mode="markers",
+                marker=list(color='black'),
+                showlegend=F)
+  }
 
   # Now, if pi !=0, we need to add the uncertainty level trace
   if(pi !=0) {
