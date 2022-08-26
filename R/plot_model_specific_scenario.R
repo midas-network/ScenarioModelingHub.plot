@@ -130,7 +130,6 @@ create_model_specific_plotly <- function(model_data, location, rtab, target_type
     )
   })
 
-  print("Test")
   # Make some subplot annotations (titles)
   outcome_annotations <- lapply(seq_along(avail_outcomes), function(outc) {
       list(x =(outc-1)/length(avail_outcomes),
