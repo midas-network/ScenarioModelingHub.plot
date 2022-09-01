@@ -1,5 +1,6 @@
 # Generate scenario comparison box plot (i.e. excess outcomes etc.)
 
+#' importFrom stringr str_detect
 get_endvalues <- function(x) {
   return(
     x[i=str_detect(outcome, "Incident") & is.na(quantile)==TRUE,
@@ -133,7 +134,7 @@ get_scen_comp_data <- function(rnd_num, model_data,
 
 }
 
-
+#' @importFrom plotly add_segments add_annotations
 comparison_plot <- function(df, showlegend=F, y_range=NULL) {
 
   title = unique(df$comparison)
