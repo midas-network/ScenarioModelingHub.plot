@@ -2,7 +2,10 @@
 
 export(create_model_specific_ggplot)
 export(create_model_specific_plotly)
+export(create_scenario_comparison_plotly)
+export(get_scen_comp_data)
 import(data.table)
+importFrom(data.table,uniqueN)
 importFrom(ggplot2,aes)
 importFrom(ggplot2,element_text)
 importFrom(ggplot2,facet_wrap)
