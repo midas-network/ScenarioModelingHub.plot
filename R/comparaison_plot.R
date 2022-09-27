@@ -104,34 +104,86 @@ get_scen_comp_data <- function(rnd_num, model_data,
   if(method=="overall_cum") end_value_function = get_endvalues_using_cum
   if(method=="zero_cum") end_value_function = get_endvalues_using_zero_cum
 
-  comp_scenarios <- scenario_comparison_lookup[[rnd_num]][["comp_scenarios"]]
-  ref_scenarios <- scenario_comparison_lookup[[rnd_num]][["ref_scenarios"]]
+  if (isTRUE(round_info[rnd_num == rnd_num, multi_comp])) {
 
-  if(is.null(comp_scenarios)) return(NULL)
+    comp_scenarios1 <- scenario_comparison_lookup[[rnd_num]][["comp_scenarios1"]]
+    ref_scenarios1 <- scenario_comparison_lookup[[rnd_num]][["ref_scenarios1"]]
+    comp_scenarios2 <- scenario_comparison_lookup[[rnd_num]][["comp_scenarios2"]]
+    ref_scenarios2 <- scenario_comparison_lookup[[rnd_num]][["ref_scenarios2"]]
+
+    if(is.null(comp_scenarios1)|is.null(comp_scenarios2)) return(NULL)
+
+  } else {
+    comp_scenarios <- scenario_comparison_lookup[[rnd_num]][["comp_scenarios"]]
+    ref_scenarios <- scenario_comparison_lookup[[rnd_num]][["ref_scenarios"]]
+
+    if(is.null(comp_scenarios)) return(NULL)
+  }
 
   # get the end values
   ev <- end_value_function(model_data, ...)
 
-  # get the relative change
-  rel <- get_relative_change(
-    ev = ev,
-    comp_scenarios = comp_scenarios,
-    ref_scenarios = ref_scenarios,
-    value_var = "endvalue", rnd_num = rnd_num
-  )
-  # change outcome to numeric in order we want
-  rel[,outcome:=fcase(
-    str_detect(outcome, "Cases"), 1,
-    str_detect(outcome, "Hospitalizations"), 2,
-    str_detect(outcome, "Deaths"),3
-  )
-  ]
+  if (isTRUE(round_info[rnd_num == rnd_num, multi_comp])) {
+    # get the relative change
+    rel1 <- get_relative_change(
+      ev = ev,
+      comp_scenarios = comp_scenarios1,
+      ref_scenarios = ref_scenarios1,
+      value_var = "endvalue", rnd_num = rnd_num
+    )
+    # change outcome to numeric in order we want
+    rel1[,outcome:=fcase(
+      str_detect(outcome, "Cases"), 1,
+      str_detect(outcome, "Hospitalizations"), 2,
+      str_detect(outcome, "Deaths"),3
+    )
+    ]
 
-  # add on the to_week colum
-  rel[,to_week:=to_week]
+    # add on the to_week colum
+    rel1[,to_week:=to_week]
 
-  return(rel)
+    # get the relative change
+    rel2 <- get_relative_change(
+      ev = ev,
+      comp_scenarios = comp_scenarios2,
+      ref_scenarios = ref_scenarios2,
+      value_var = "endvalue", rnd_num = rnd_num
+    )
+    # change outcome to numeric in order we want
+    rel2[,outcome:=fcase(
+      str_detect(outcome, "Cases"), 1,
+      str_detect(outcome, "Hospitalizations"), 2,
+      str_detect(outcome, "Deaths"),3
+    )
+    ]
 
+    # add on the to_week colum
+    rel2[,to_week:=to_week]
+
+    rel_tot <- list(rel1, rel2)
+
+  } else {
+    # get the relative change
+    rel <- get_relative_change(
+      ev = ev,
+      comp_scenarios = comp_scenarios,
+      ref_scenarios = ref_scenarios,
+      value_var = "endvalue", rnd_num = rnd_num
+    )
+    # change outcome to numeric in order we want
+    rel[,outcome:=fcase(
+      str_detect(outcome, "Cases"), 1,
+      str_detect(outcome, "Hospitalizations"), 2,
+      str_detect(outcome, "Deaths"),3
+    )
+    ]
+
+    # add on the to_week colum
+    rel[,to_week:=to_week]
+
+    rel_tot <- rel
+  }
+  return(rel_tot)
 }
 
 #' @importFrom plotly add_segments add_annotations
