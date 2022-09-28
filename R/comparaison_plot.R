@@ -310,8 +310,10 @@ create_scenario_comparison_plotly <- function(scen_comp_data = NULL,
            yaxis2 = list(tickformat= ".1%"),
            title = list(
              text = paste0(
-               "Excess percentage of reported cases, hospitalizations, and ",
-               "deaths compared with the \n most optimistic scenario (",
+               "Excess percentage of reported ", paste0(
+                 c("cases",  "hospitalizations", "deaths")[unique(
+                   scen_comp_data$outcome)], collapse = ", "),
+               " compared with the \n most optimistic scenario (",
                loc_name,"); Projection Wk ", from_week, "-", to_week),
              xref = "container", yref="container", x=0, y=0.98, xanchor="left",
              pad =list(b=30)
