@@ -234,7 +234,7 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
   # plot style
   p <- p %>%
     layout(
-      title = list(font = list(size = 16), yanchor = "top",# yref= "paper",
+      title = list(font = list(size = 16), yanchor = "top",
                    xanchor = "center", x = 0.5,
                    text = title_text),
       annotations = annotations,
