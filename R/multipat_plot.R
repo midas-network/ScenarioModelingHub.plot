@@ -9,14 +9,12 @@ get_multipat_data <- function(model_data, other_data, r) {
                              quantile %in% c(0.05, 0.25, 0.5, 0.75, 0.95, NA)]
   model_data[,target_end_date := as.character(target_end_date)]
   date <- intersect(model_data$target_end_date, other_data$target_end_date)
-  # com_outcome <- intersect(model_data$outcome, other_data$outcome)
   model_data <- model_data[target_end_date %in% date]
   model_data$pathogen <- getOption("pathogen")
   model_data <-model_data[, c("outcome", "scenario_id", "value", "pathogen",
                               "target_end_date", "location_name", "quantile")]
   other_data <- other_data[target_end_date %in% date &
-                             quantile %in% c(0.05, 0.25, 0.5, 0.75, 0.95, NA)]# &
-  #    outcome %in% com_outcome]
+                             quantile %in% c(0.05, 0.25, 0.5, 0.75, 0.95, NA)]
   setnames(other_data, "location", "location_name")
   tot_data <- list(model = model_data, other = other_data)
   return(tot_data)
@@ -31,39 +29,33 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
 
   # First pathogen preparation
   if (pi1 == 0.5) {
-    covid_data <- lst_df$model[#scenario_id == scen_sel &
-      location_name == location &
-        outcome == target &
-        is.na(quantile)]
+    model_data <- lst_df$model[location_name == location & outcome == target &
+                                 is.na(quantile)]
   } else {
-    covid_data <- lst_df$model[#scenario_id == scen_sel &
-      location_name == location &
-        outcome == target &
-        quantile == pi1]
+    model_data <- lst_df$model[location_name == location & outcome == target &
+                                 quantile == pi1]
   }
   # Second pathogen preparation
   if (pi2 == 0.5) {
-    flu_data <- lst_df$other[scenario_id == scen_sel2 &
-                               location_name == location &
-                               outcome == target &
-                               is.na(quantile)]
+    other_data <- lst_df$other[scenario_id == scen_sel2 &
+                                 location_name == location &
+                                 outcome == target & is.na(quantile)]
   } else {
-    flu_data <- lst_df$other[scenario_id == scen_sel2 &
-                               location_name == location &
-                               outcome == target &
-                               quantile == pi2]
+    other_data <- lst_df$other[scenario_id == scen_sel2 &
+                                 location_name == location & outcome == target &
+                                 quantile == pi2]
   }
 
   # Observed Data
   obs_data <- gs_data[[target]]
   if (dim(obs_data)[1] != 0)
-    obs_data <- obs_data[time_value %in% as.Date(covid_data$target_end_date) &
+    obs_data <- obs_data[time_value %in% as.Date(model_data$target_end_date) &
                            geo_value_fullname == location]
 
   # Preparation Subplot
   lst_plot <- lapply(scen_sel, function(x) {
 
-    covid_data <- covid_data[scenario_id == x]
+    model_data <- model_data[scenario_id == x]
 
     p <- plot_ly(height = 850) %>%
       layout(yaxis = list(title = target))
@@ -72,21 +64,21 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
       p <- p %>% add_trace(
         data = obs_data, x = ~time_value, y = ~value, type = "scatter",
         mode = "lines+markers", legendgroup = "observed_data",
-        name = paste0(unique(covid_data$pathogen), " Observed Data"),
-        hovertemplate = paste0(unique(covid_data$pathogen), " Observed Data: ",
+        name = paste0(unique(model_data$pathogen), " Observed Data"),
+        hovertemplate = paste0(unique(model_data$pathogen), " Observed Data: ",
                                '%{y:.2f}<extra></extra>'))
     }
 
-    if (dim(covid_data)[1] > 0) {
-      covid_data[,target_end_date := as.Date(target_end_date)]
+    if (dim(model_data)[1] > 0) {
+      model_data[,target_end_date := as.Date(target_end_date)]
       p <- p %>% add_trace(
-        data = covid_data, x = ~target_end_date, y = ~value, type = "bar",
-        name = paste0(unique(covid_data$pathogen), " (", x, ")"),
-        hovertemplate = paste0(unique(covid_data$pathogen), " (scen. ",
+        data = model_data, x = ~target_end_date, y = ~value, type = "bar",
+        name = paste0(unique(model_data$pathogen), " (", x, ")"),
+        hovertemplate = paste0(unique(model_data$pathogen), " (scen. ",
                                str_extract(x, "[[:alpha:]]"), "): ",
                                '%{y:.2f}<extra></extra>')
       )
-      title <- paste0(str_to_title(unique(covid_data$pathogen)), " Round ",
+      title <- paste0(str_to_title(unique(model_data$pathogen)), " Round ",
                       rd_num)
       annotation <- NULL
     } else {
@@ -104,31 +96,31 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
 
     }
 
-    if (dim(flu_data)[1] > 0) {
-      flu_data[, target_end_date := as.Date(target_end_date)]
+    if (dim(other_data)[1] > 0) {
+      other_data[, target_end_date := as.Date(target_end_date)]
       p <- p %>%
-        add_trace(data = flu_data, x = ~target_end_date,
+        add_trace(data = other_data, x = ~target_end_date,
                   y = ~value, type = "bar",
-                  legendgrouptitle = unique(flu_data$pathogen),
-                  legendgroup = unique(flu_data$pathogen),
-                  name = paste0(unique(flu_data$pathogen), " (", scen_sel2 ,
+                  legendgrouptitle = unique(other_data$pathogen),
+                  legendgroup = unique(other_data$pathogen),
+                  name = paste0(unique(other_data$pathogen), " (", scen_sel2 ,
                                 ")"),
                   hovertemplate = paste0(
-                    unique(flu_data$pathogen), " (scen. ",
+                    unique(other_data$pathogen), " (scen. ",
                     str_extract(scen_sel2, "[[:alpha:]]"), "): ",
                     '%{y:.2f}<extra></extra>')) %>%
         layout(barmode = "stack")
       if (is.null(title)) {
-        title <- paste(title, paste0(str_to_title(unique(flu_data$pathogen)),
+        title <- paste(title, paste0(str_to_title(unique(other_data$pathogen)),
                                      " Round ",
                                      str_extract(other_round[unique(
-                                       flu_data$scenario_id)], "[[:digit:]]+")),
-                       sep = "")
+                                       other_data$scenario_id)], "[[:digit:]]+"
+                                       )), sep = "")
       } else {
-        title <- paste(title, paste0(str_to_title(unique(flu_data$pathogen)),
+        title <- paste(title, paste0(str_to_title(unique(other_data$pathogen)),
                                      " Round ", str_extract(other_round[unique(
-                                       flu_data$scenario_id)], "[[:digit:]]+")),
-                       sep = ", ")
+                                       other_data$scenario_id)], "[[:digit:]]+"
+                                       )), sep = ", ")
       }
     } else {
       annotation <- c(
@@ -191,9 +183,9 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
     }
   }
 
-  if (dim(flu_data)[1] > 0) {
+  if (dim(other_data)[1] > 0) {
     # Second pathogen legend unique (only 1 possible choice)
-    sel <- grep(unique(flu_data$pathogen), purrr::map(p$x$data,
+    sel <- grep(unique(other_data$pathogen), purrr::map(p$x$data,
                                                       "legendgroup"))
     for (i in sel[-length(sel)]) {
       p$x$data[[i]]$showlegend <- FALSE
