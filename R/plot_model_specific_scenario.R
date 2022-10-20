@@ -5,7 +5,8 @@
 #' @importFrom stringr str_extract
 #' @import data.table
 #' @importFrom lubridate period
-get_model_specific_trend_data <- function(model_data, location, rtab, target_type, selected_model) {
+get_model_specific_trend_data <- function(model_data, location, rtab,
+                                          target_type, selected_model) {
 
   rndnum = as.integer(str_extract(rtab, "\\d+"))
 
@@ -33,10 +34,13 @@ get_model_specific_trend_data <- function(model_data, location, rtab, target_typ
   # filter the gold standard data, based on 26 wks prior to the pred_date
   if (!is.null(gs_data)) {
     g_df <- lapply(gs_data[targets], function(x) {
-      x[geo_value_fullname==location &
-          time_value > (pred_date - lubridate::period(4, "month")) &
-          time_value <= max_model_date ]
-
+      if (dim(x)[1]>0) {
+        x[geo_value_fullname==location &
+            time_value > (pred_date - lubridate::period(4, "month")) &
+            time_value <= max_model_date ]
+      } else {
+        x
+      }
     })
     g_df <- rbindlist(g_df, idcol="outcome")
   } else {
@@ -84,7 +88,8 @@ create_model_specific_ggplot <- function(model_data, location, rtab, target_type
 }
 #' @importFrom plotly subplot layout
 #' @export
-create_model_specific_plotly <- function(model_data, location, rtab, target_type, model_name, pi=0) {
+create_model_specific_plotly <- function(model_data, location, rtab,
+                                         target_type, model_name, pi=0) {
 
   # Create the plot data
   pl_input <- get_model_specific_trend_data(model_data, location, rtab,
@@ -115,17 +120,18 @@ create_model_specific_plotly <- function(model_data, location, rtab, target_type
 
   avail_outcomes <- intersect(facet_levels, unique(pl_input[["m_df"]]$outcome))
 
-  if (is.null(pl_input[["g_df"]])) {
-    g_df_plot <- NULL
-  } else {
-    g_df_plot <- pl_input[["g_df"]][outcome==avail_outcomes[x]]
-  }
-
   subplots <- lapply(seq_along(avail_outcomes), function(x) {
+
+    if (is.null(pl_input[["g_df"]])) {
+      g_df_plot <- NULL
+    } else {
+      g_df_plot <- pl_input[["g_df"]][outcome==avail_outcomes[x]]
+    }
+
     outcome_subplot(pl_input[["m_df"]][outcome==avail_outcomes[x]],
                     g_df_plot,
                     outcome==avail_outcomes[x],
-                    model_legend = x==1,
+                    model_legend = x ==1,
                     pi=pi
     )
   })
@@ -134,7 +140,8 @@ create_model_specific_plotly <- function(model_data, location, rtab, target_type
   outcome_annotations <- lapply(seq_along(avail_outcomes), function(outc) {
       list(x =(outc-1)/length(avail_outcomes),
            y = 1.05,
-           text = paste0("<b>", avail_outcomes[outc], "</b>"), font=list(size=12), showarrow = F, xref='paper', yref='paper'
+           text = paste0("<b>", avail_outcomes[outc], "</b>"),
+           font=list(size=12), showarrow = F, xref='paper', yref='paper'
            )
     })
 
