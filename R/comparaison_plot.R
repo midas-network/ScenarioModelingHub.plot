@@ -42,7 +42,7 @@ get_endvalues_using_cum <- function(cd) {
 
 
 get_relative_change <- function(ev, comp_scenarios, ref_scenarios, value_var,
-                                rnd_num) {
+                                rndnum) {
 
   on_vars = c("outcome", "location_name", "model_name")
   if("week" %in% colnames(ev)) on_vars = c(on_vars, "week")
@@ -73,7 +73,7 @@ get_relative_change <- function(ev, comp_scenarios, ref_scenarios, value_var,
   if(length(ensembles)>1) {
     ref_vals <- ref_vals[
       !model_name %in% ensembles[which(ensembles !=
-                                         get_default_ensemble_fixed(rnd_num))]
+                                         get_default_ensemble_fixed(rndnum))]
     ]
   }
 
@@ -89,14 +89,14 @@ get_relative_change <- function(ev, comp_scenarios, ref_scenarios, value_var,
 
 #' Function to get the scenario_comparison data
 #' @export
-get_scen_comp_data <- function(rnd_num, model_data,
+get_scen_comp_data <- function(rndnum, model_data,
                                method = c("sum_incidence", "overall_cum",
                                           "zero_cum"), ...) {
 
   # get the maximum week that this comparison will go to (i.e. always the max
   # week of the ensemble)
-  #to_week= fifelse(rnd_num==5, 26, max(model_data$target_wk))
-  ens <- get_default_ensemble_fixed(rnd_num)
+  #to_week= fifelse(rndnum==5, 26, max(model_data$target_wk))
+  ens <- get_default_ensemble_fixed(rndnum)
   to_week = max(model_data[model_name==ens, target_wk])
 
   method = match.arg(method)
@@ -104,18 +104,18 @@ get_scen_comp_data <- function(rnd_num, model_data,
   if(method=="overall_cum") end_value_function = get_endvalues_using_cum
   if(method=="zero_cum") end_value_function = get_endvalues_using_zero_cum
 
-  if (isTRUE(round_info[rnd_num == rnd_num, multi_comp])) {
+  if (isTRUE(round_info[rnd_num == rndnum, multi_comp])) {
 
-    comp_scenarios1 <- scenario_comparison_lookup[[rnd_num]][["comp_scenarios1"]]
-    ref_scenarios1 <- scenario_comparison_lookup[[rnd_num]][["ref_scenarios1"]]
-    comp_scenarios2 <- scenario_comparison_lookup[[rnd_num]][["comp_scenarios2"]]
-    ref_scenarios2 <- scenario_comparison_lookup[[rnd_num]][["ref_scenarios2"]]
+    comp_scenarios1 <- scenario_comparison_lookup[[rndnum]][["comp_scenarios1"]]
+    ref_scenarios1 <- scenario_comparison_lookup[[rndnum]][["ref_scenarios1"]]
+    comp_scenarios2 <- scenario_comparison_lookup[[rndnum]][["comp_scenarios2"]]
+    ref_scenarios2 <- scenario_comparison_lookup[[rndnum]][["ref_scenarios2"]]
 
     if(is.null(comp_scenarios1)|is.null(comp_scenarios2)) return(NULL)
 
   } else {
-    comp_scenarios <- scenario_comparison_lookup[[rnd_num]][["comp_scenarios"]]
-    ref_scenarios <- scenario_comparison_lookup[[rnd_num]][["ref_scenarios"]]
+    comp_scenarios <- scenario_comparison_lookup[[rndnum]][["comp_scenarios"]]
+    ref_scenarios <- scenario_comparison_lookup[[rndnum]][["ref_scenarios"]]
 
     if(is.null(comp_scenarios)) return(NULL)
   }
@@ -123,13 +123,13 @@ get_scen_comp_data <- function(rnd_num, model_data,
   # get the end values
   ev <- end_value_function(model_data, ...)
 
-  if (isTRUE(round_info[rnd_num == rnd_num, multi_comp])) {
+  if (isTRUE(round_info[rnd_num == rndnum, multi_comp])) {
     # get the relative change
     rel1 <- get_relative_change(
       ev = ev,
       comp_scenarios = comp_scenarios1,
       ref_scenarios = ref_scenarios1,
-      value_var = "endvalue", rnd_num = rnd_num
+      value_var = "endvalue", rndnum = rndnum
     )
     # change outcome to numeric in order we want
     rel1[,outcome:=fcase(
@@ -147,7 +147,7 @@ get_scen_comp_data <- function(rnd_num, model_data,
       ev = ev,
       comp_scenarios = comp_scenarios2,
       ref_scenarios = ref_scenarios2,
-      value_var = "endvalue", rnd_num = rnd_num
+      value_var = "endvalue", rndnum = rndnum
     )
     # change outcome to numeric in order we want
     rel2[,outcome:=fcase(
@@ -168,7 +168,7 @@ get_scen_comp_data <- function(rnd_num, model_data,
       ev = ev,
       comp_scenarios = comp_scenarios,
       ref_scenarios = ref_scenarios,
-      value_var = "endvalue", rnd_num = rnd_num
+      value_var = "endvalue", rndnum = rndnum
     )
     # change outcome to numeric in order we want
     rel[,outcome:=fcase(
