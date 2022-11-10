@@ -5,7 +5,7 @@
 \title{Function to get the scenario_comparison data}
 \usage{
 get_scen_comp_data(
-  rnd_num,
+  rndnum,
   model_data,
   method = c("sum_incidence", "overall_cum", "zero_cum"),
   ...

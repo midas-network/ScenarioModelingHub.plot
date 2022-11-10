@@ -4,7 +4,7 @@
 #' specific colors for those multiple Ensembles
 #'
 #' @importFrom stringr str_detect
-#'
+#' @export
 get_model_colors <- function(m_df, ensemble_colors=NULL) {
 
   all_models = unique(m_df$model_name)
@@ -40,7 +40,7 @@ get_model_colors <- function(m_df, ensemble_colors=NULL) {
 # https://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
 #'
 #' @importFrom grDevices hcl
-#'
+#' @export
 g_color_hue <- function(n, alpha=1) {
   hues = seq(15, 375, length = n + 1)
   hcl(h = hues, l = 65, c = 100)[1:n]
@@ -50,7 +50,7 @@ g_color_hue <- function(n, alpha=1) {
 # Adds title as annotation, helpful for subplot
 #'
 #' @importFrom plotly add_annotations
-#'
+#' @export
 add_annotation <- function(fig, text, x=0.01, y=1.06, yref="y domain", xref="x domain", xanchor="left", yanchor="top",
                            showarrow = FALSE, fontsize=10){
 
@@ -62,6 +62,8 @@ add_annotation <- function(fig, text, x=0.01, y=1.06, yref="y domain", xref="x d
 }
 
 # get vertical lines
+#'
+#' @export
 vline <- function(x=0, style="solid", color="grey") {
   vline_details = list(
     type="line",
