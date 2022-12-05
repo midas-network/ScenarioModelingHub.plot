@@ -34,10 +34,12 @@ get_model_specific_trend_data <- function(model_data, location, rtab,
   # filter the gold standard data, based on 26 wks prior to the pred_date
   if (!is.null(gs_data)) {
     g_df <- lapply(gs_data[targets], function(x) {
-      if (dim(x)[1]>0) {
+      if (dim(x)[1]>0 & !(any(grepl("quantile",names(x))))) {
         x[geo_value_fullname==location &
             time_value > (pred_date - lubridate::period(4, "month")) &
             time_value <= max_model_date ]
+      } else if (any(grepl("quantile",names(x)))) {
+        x <- x[-(1:dim(x)[1]), .(time_value, fips, geo_value_fullname, value)]
       } else {
         x
       }
@@ -61,6 +63,7 @@ get_model_specific_trend_data <- function(model_data, location, rtab,
 create_model_specific_ggplot <- function(model_data, location, rtab, target_type, model_name) {
 
   pl_input <- get_model_specific_trend_data(model_data, location, rtab, target_type,model_name)
+
   # This can be null (see above)
   if(is.null(pl_input)) return(NULL)
 
