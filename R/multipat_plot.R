@@ -11,8 +11,8 @@ get_multipat_data <- function(model_data, other_data, r) {
   date <- intersect(model_data$target_end_date, other_data$target_end_date)
   model_data <- model_data[target_end_date %in% date]
   model_data$pathogen <- getOption("pathogen")
-  model_data <-model_data[, c("outcome", "scenario_id", "value", "pathogen",
-                              "target_end_date", "location_name", "quantile")]
+  model_data <- model_data[, c("outcome", "scenario_id", "value", "pathogen",
+                               "target_end_date", "location_name", "quantile")]
   other_data <- other_data[target_end_date %in% date &
                              quantile %in% c(0.05, 0.25, 0.5, 0.75, 0.95, NA)]
   setnames(other_data, "location", "location_name")
@@ -92,7 +92,7 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
           ", and the location: ", location, ". Please select other options."),
           font = list(size = 14, color = "grey"), y = -0.2,
           x =  0, xanchor = "left",
-          xref = "paper", yref='paper', showarrow = FALSE))
+          xref = "paper", yref = 'paper', showarrow = FALSE))
 
     }
 
@@ -132,7 +132,7 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
             ", and the location: ", location, ". Please select other options."),
             font = list(size = 14, color = "grey"), y = -0.2,
             x =  0, xanchor = "left",
-            xref = "paper", yref='paper', showarrow = FALSE)))
+            xref = "paper", yref = 'paper', showarrow = FALSE)))
     }
 
     p <- p %>% layout(
@@ -157,7 +157,6 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
 
   if (length(scen_sel) > 3) n_row <- 2 else n_row <- 1
   p <- subplot(purrr::map(lst_plot, "plot"), nrows = n_row,
-               #shareX = TRUE, shareY = TRUE,
                titleX = FALSE, titleY = FALSE)
 
   # change color
@@ -195,7 +194,7 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
                    list(list(
                      text = target, font = list(size = 16), y = 0.5,
                      x = -0.05, textangle = 270, xanchor = "center",
-                     xref = "paper", yref='paper', showarrow = FALSE)))
+                     xref = "paper", yref = 'paper', showarrow = FALSE)))
 
   x1_ticks <- x2_ticks <- x3_ticks <- x4_ticks <- TRUE
   if (length(scen_sel) > 3) {
@@ -238,7 +237,7 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
       yaxis = list(matches = "y2", showticklabels = y1_ticks),
       yaxis2 = list(matches = "y", showticklabels = y2_ticks),
       yaxis3 = list(matches = "y", showticklabels = y3_ticks),
-      yaxis4 = list(matches = "y", showticklabels = y3_ticks),
+      yaxis4 = list(matches = "y", showticklabels = y4_ticks),
       xaxis = list(title = "", matches = "x2", showticklabels = x1_ticks),
       xaxis2 = list(matches = "x", showticklabels = x2_ticks),
       xaxis3 = list(matches = "x", showticklabels = x3_ticks),
