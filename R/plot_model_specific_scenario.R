@@ -35,14 +35,26 @@ get_model_specific_trend_data <- function(model_data, location, rtab,
   if (!is.null(gs_data)) {
     g_df <- lapply(gs_data[targets], function(x) {
       if (dim(x)[1]>0 & !(any(grepl("quantile",names(x))))) {
-        x[geo_value_fullname==location &
-            time_value > (pred_date - lubridate::period(4, "month")) &
-            time_value <= max_model_date ]
+        if ((any(grepl("pathogen",names(x))) & any(grepl("pathogen",names(x))))) {
+          if (any(x$pathogen == "flu") & any(x$target == "hosp_cumulative_num")) {
+            x <- x[-(1:dim(x)[1]), .(time_value, fips, geo_value_fullname, value)]
+          } else {
+            x <- x[geo_value_fullname==location &
+                     time_value > (pred_date - lubridate::period(4, "month")) &
+                     time_value <= max_model_date ]
+          }
+        } else {
+          x <- x[geo_value_fullname==location &
+                   time_value > (pred_date - lubridate::period(4, "month")) &
+                   time_value <= max_model_date ]
+        }
       } else if (any(grepl("quantile",names(x)))) {
         x <- x[-(1:dim(x)[1]), .(time_value, fips, geo_value_fullname, value)]
       } else {
         x
       }
+      x <- x[, .(time_value, fips, geo_value_fullname, value)]
+      return(x)
     })
     g_df <- rbindlist(g_df, idcol="outcome")
   } else {
