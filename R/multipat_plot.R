@@ -47,10 +47,32 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
   }
 
   # Observed Data
+
   obs_data <- gs_data[[target]]
   if (dim(obs_data)[1] != 0)
     obs_data <- obs_data[time_value %in% as.Date(model_data$target_end_date) &
                            geo_value_fullname == location]
+
+  other_obs_data <- dir("../visualization/data-goldstandard/",
+                        pattern = unique(other_data$pathogen),
+                        ignore.case = TRUE, full.names = TRUE)
+  if (length(other_obs_data) > 0 & target == "Incident Hospitalizations") {
+    other_obs_data <- data.table::fread(other_obs_data)
+    other_obs_data <- other_obs_data[as.Date(time_value) %in%
+                                     as.Date(model_data$target_end_date)]
+    other_obs_data[, pathogen := unique(other_data$pathogen)]
+    cum_obs_data <- dplyr::left_join(
+      obs_data, other_obs_data, by = c("time_value", "geo_value_fullname",
+                                       "fips")) %>%
+      dplyr::mutate(value = `value.x` + `value.y`) %>%
+      dplyr::select(time_value, fips, geo_value_fullname, value) %>%
+      dplyr::mutate(pathogen = paste0(stringr::str_to_title(unique(obs_data$pathogen)), " + ",
+                                      stringr::str_to_title(unique(other_obs_data$pathogen))))
+  } else {
+    other_obs_data <- NULL
+    cum_obs_data <- NULL
+  }
+
 
   # Preparation Subplot
   lst_plot <- lapply(scen_sel, function(x) {
@@ -64,8 +86,19 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
       p <- p %>% add_trace(
         data = obs_data, x = ~time_value, y = ~value, type = "scatter",
         mode = "lines+markers", legendgroup = "observed_data",
-        name = paste0(unique(model_data$pathogen), " Observed Data"),
-        hovertemplate = paste0(unique(model_data$pathogen), " Observed Data: ",
+        name = paste0(stringr::str_to_title(unique(obs_data$pathogen)),
+                      " Observed Data"),
+        hovertemplate = paste0(stringr::str_to_title(unique(obs_data$pathogen)),
+                               " Observed Data: ", '%{y:.2f}<extra></extra>'))
+    }
+
+    if (!is.null(cum_obs_data)) {
+      cum_obs_data[,time_value := as.Date(time_value)]
+      p <- p %>% add_trace(
+        data = cum_obs_data, x = ~time_value, y = ~value, type = "scatter",
+        mode = "lines+markers", legendgroup = "other observed_data", #legendgroup = "observed_data",
+        name = paste0(unique(cum_obs_data$pathogen), " Observed Data"),
+        hovertemplate = paste0(unique(cum_obs_data$pathogen), " Observed Data: ",
                                '%{y:.2f}<extra></extra>'))
     }
 
@@ -171,14 +204,37 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
     }
   }
 
-  obs_sel <- grep("observed_data", purrr::map(p$x$data, "legendgroup"))
+  #obs_sel <- grep("observed_data", purrr::map(p$x$data, "legendgroup"))
+  obs_sel <- grep(paste0(stringr::str_to_title(unique(obs_data$pathogen)),
+                         " Observed Data"), purrr::map(p$x$data, "name"))
   if (length(obs_sel) > 0 ) {
     for (i in obs_sel) {
       p$x$data[[i]]$marker$color <- "rgba(0,0,0,1)"
       p$x$data[[i]]$marker$line <- "rgba(0,0,0,1)"
       p$x$data[[i]]$line$color[1] <- "rgba(0,0,0,1)"
       p$x$data[[i]]$visible <- "legendonly"
-      if (i != obs_sel[1]) p$x$data[[i]]$showlegend <- FALSE
+      if (i != obs_sel[1]) {
+        p$x$data[[i]]$showlegend <- FALSE
+    #  } else {
+    #    if (length(obs_sel) > 4) p$x$data[[i]]$name <- "Observed Data"
+      }
+
+    }
+  }
+
+  if (!is.null(cum_obs_data)) {
+    cum_obs_sel <- grep(gsub("\\+", ".", paste0(unique(cum_obs_data$pathogen)),
+                             " Observed Data"), purrr::map(p$x$data, "name"))
+    if (length(cum_obs_sel) > 0 ) {
+      for (i in cum_obs_sel) {
+        p$x$data[[i]]$marker$color <- "rgba(90,90,90,1)"
+        p$x$data[[i]]$marker$line <- "rgba(90,90,90,1)"
+        p$x$data[[i]]$line$color[1] <- "rgba(90,90,90,1)"
+        p$x$data[[i]]$visible <- "legendonly"
+        if (i != cum_obs_sel[1]) {
+          p$x$data[[i]]$showlegend <- FALSE
+        }
+      }
     }
   }
 
