@@ -96,7 +96,7 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
       cum_obs_data[,time_value := as.Date(time_value)]
       p <- p %>% add_trace(
         data = cum_obs_data, x = ~time_value, y = ~value, type = "scatter",
-        mode = "lines+markers", legendgroup = "other observed_data", #legendgroup = "observed_data",
+        mode = "lines+markers", legendgroup = "other observed_data",
         name = paste0(unique(cum_obs_data$pathogen), " Observed Data"),
         hovertemplate = paste0(unique(cum_obs_data$pathogen), " Observed Data: ",
                                '%{y:.2f}<extra></extra>'))
@@ -204,7 +204,6 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
     }
   }
 
-  #obs_sel <- grep("observed_data", purrr::map(p$x$data, "legendgroup"))
   obs_sel <- grep(paste0(stringr::str_to_title(unique(obs_data$pathogen)),
                          " Observed Data"), purrr::map(p$x$data, "name"))
   if (length(obs_sel) > 0 ) {
@@ -215,8 +214,6 @@ create_multipat_plotly <- function(lst_df, location, scen_sel, scen_sel2,
       p$x$data[[i]]$visible <- "legendonly"
       if (i != obs_sel[1]) {
         p$x$data[[i]]$showlegend <- FALSE
-    #  } else {
-    #    if (length(obs_sel) > 4) p$x$data[[i]]$name <- "Observed Data"
       }
 
     }
